@@ -27,6 +27,52 @@ Para desplegar la infraestructura definida en este proyecto, sigue estos pasos:
 3. Ejecuta `npm run plan` para revisar los cambios de infraestructura propuestos.
 4. Ejecuta `npm run deploy` para desplegar la infraestructura en AWS.
 
+## Scripts de Utilidad
+En la carpeta `scripts` se incluyen algunos scripts de utilidad para probar la infraestructura desplegada. Estos scripts estan escritos en Python, las dependencias se pueden instalar con `pip install -r requirements.txt`. que se encuentran en la carpeta `scripts`.
+
+Para ejecutar los scripts, es necesario hacer ssh a la instancia EC2 desplegada y ejecutarlos desde allí ya que se conectan a Kafka a través de la red privada a su vez es necesario crear un topic de Kafka con el nombre `michigan-lake-topic` para poder enviar y consumir mensajes.
+
+En total hay 2 scripts:
+
+*  `consumer.py`: Script que consume mensajes de un topic de Kafka.
+* `producer.py`: Script que produce mensajes en un topic de Kafka.
+
+### Productor de Kafka
+
+El script `producer.py` lee un archivo csv con datos de `input.csv` más detalles de este dataset en [Beach Weather Stations - Automated Sensors](https://data.cityofchicago.org/Parks-Recreation/Beach-Weather-Stations-Automated-Sensors/k7hf-8y75/about_data) y los envía a un topic de Kafka. Al procesar el archivo ordena los registros por timestamps y los envía al topic de Kafka con un delay de 1 segundo entre cada mensaje (este delay se puede modificar en el script).
+
+### Consumidor de Kafka
+
+El script `consumer.py` consume los mensajes de Kafka los procesa y los guarda en una base de datos PostgreSQL. Para ello, crea una tabla en la base de datos con el siguiente esquema:
+
+```sql
+weather_data (
+        station_name VARCHAR(255),
+        measurement_timestamp TIMESTAMP,
+        air_temperature FLOAT,
+        wet_bulb_temperature FLOAT,
+        humidity INT,
+        rain_intensity FLOAT,
+        interval_rain FLOAT,
+        total_rain FLOAT,
+        precipitation_type INT,
+        wind_direction INT,
+        wind_speed FLOAT,
+        maximum_wind_speed FLOAT,
+        barometric_pressure FLOAT,
+        solar_radiation INT,
+        heading INT,
+        battery_life FLOAT,
+        measurement_timestamp_label VARCHAR(255),
+        measurement_id VARCHAR(255) PRIMARY KEY
+    );
+```
+
+Por temas de seguridad, las credenciales de la base de datos no se incluyen en el script, por lo que es necesario modificar el script para incluir las credenciales actualizadas.
+
+Con estos scripts se puede probar la infraestructura desplegada y comprobar que funciona correctamente enviando y consumiendo mensajes desde un topic de Kafka.
+
+
 ## Contribuciones y Feedback
 
 Cualquier feedback o contribuciones al proyecto son bienvenidos. Si deseas contribuir, por favor, envía un pull request o abre un issue.
